@@ -4,10 +4,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.regex.Pattern;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -21,7 +21,7 @@ public class Client
     {
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
-        options.addRequiredOption("a", "audio", true, "Audio file to be processed");
+        options.addRequiredOption("a", "audio", true, "Audio file or youtube, facebook, twitter, dailymotion video link to be processed");
         options.addOption("o", "output", true, "Output filename (will print to terminal if not specified)");
         options.addRequiredOption("i", "id", true, "Your transcriber API ID");
         options.addRequiredOption("k", "token", true, "Your transcriber API Token");
@@ -34,9 +34,15 @@ public class Client
             System.err.println("Parsing commandline arguments failed: " + ex.getMessage());
             return;
         }
+        String result = null;
         Transcriber transcriber = new Transcriber(cmd.getOptionValue("i"), 
-                cmd.getOptionValue("k"), cmd.getOptionValue("l"));
-        String result = transcriber.transcribe(cmd.getOptionValue("a"));
+                                    cmd.getOptionValue("k"), cmd.getOptionValue("l"));
+        Pattern rx = Pattern.compile("^(https?://)?(www\\.)?(youtube|youtu|youtube-nocookie|facebook|dailymotion|twitter)\\.(com|be)");
+        if(rx.matcher(cmd.getOptionValue("a")).find()) {
+            result = transcriber.transcribeVideoLink(cmd.getOptionValue("a"));
+        } else {
+            result = transcriber.transcribe(cmd.getOptionValue("a"));
+        }
         if(result == null) {
             System.err.println("Transcibing process failed.");
             System.err.println("Press any key to exit...");

@@ -27,7 +27,6 @@ public class Transcriber {
     private String userId = null;
     private String token = null;
     private String lang = null;
-    private static final String API_URL = "http://api.azreco.az/transcribe";
     
     public Transcriber(String userId, String token, String lang) {
         this.userId = userId;
@@ -36,10 +35,11 @@ public class Transcriber {
     }
     
     public String transcribe(String audiofile) {
+        String apiURL = "http://api.azreco.az/transcribe";
         CloseableHttpClient httpClient = HttpClients.createDefault();
         String result = null;
         try {
-            HttpPost httpPost = new HttpPost(API_URL);
+            HttpPost httpPost = new HttpPost(apiURL);
             FileBody binary = new FileBody(new File(audiofile));
             StringBody idContent = new StringBody(userId, ContentType.TEXT_PLAIN);
             StringBody tokenContent = new StringBody(token, ContentType.TEXT_PLAIN);
@@ -49,6 +49,60 @@ public class Transcriber {
                     .addPart("api_token", tokenContent)
                     .addPart("lang", langContent)
                     .addPart("file", binary)
+                    .build();
+            httpPost.setEntity(reqEntity);
+            CloseableHttpResponse response = null;
+            try {
+                response = (CloseableHttpResponse) httpClient.execute(httpPost);
+                if(response.getStatusLine().getStatusCode() != 200) {
+                    System.err.println("Transcription error: " + response.getStatusLine().getReasonPhrase());
+                    return null;
+                }
+                HttpEntity resEntity = response.getEntity();
+
+                try {
+                    result = EntityUtils.toString(resEntity);
+                    EntityUtils.consume(resEntity);
+                } catch (IOException | ParseException ex) {
+                    System.err.println("Parsing response failed: " + ex.getMessage());
+                }
+            } catch (IOException ex) {
+                System.err.println("Making transcription request failed: " + ex.getMessage());
+                return null;
+            }
+            finally {
+                if(response != null) {
+                    try {
+                        response.close();
+                    } catch (IOException ex) {
+                    }
+                }
+            }
+        }
+        finally {
+            try {
+                httpClient.close();
+            } catch (IOException ex) {
+            }
+        }
+        return result;
+    }
+    
+    public String transcribeVideoLink(String audiofile) {
+        String apiURL = "http://api.azreco.az/transcribe_video_link";
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String result = null;
+        try {
+            HttpPost httpPost = new HttpPost(apiURL);
+            StringBody idContent = new StringBody(userId, ContentType.TEXT_PLAIN);
+            StringBody tokenContent = new StringBody(token, ContentType.TEXT_PLAIN);
+            StringBody langContent = new StringBody(lang, ContentType.TEXT_PLAIN);
+            StringBody linkContent = new StringBody(audiofile, ContentType.TEXT_PLAIN);
+            HttpEntity reqEntity = MultipartEntityBuilder.create()
+                    .addPart("api_id", idContent)
+                    .addPart("api_token", tokenContent)
+                    .addPart("lang", langContent)
+                    .addPart("link", linkContent)
                     .build();
             httpPost.setEntity(reqEntity);
             CloseableHttpResponse response = null;

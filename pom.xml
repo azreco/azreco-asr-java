@@ -28,10 +28,10 @@
                           <classpathPrefix>libs/</classpathPrefix>
                       </manifest>
                       <manifestEntries>
-                          <Implementation-Title>azreco-asr-java</Implementation-Title>
+                          <Implementation-Title>voicen-asr-consumer</Implementation-Title>
                           <Implementation-Version>1.0</Implementation-Version>
-                          <Built-By>AzReco</Built-By>
-                          <Main-Class>com.azreo.asr.api.Client</Main-Class>
+                          <Built-By>Voicen</Built-By>
+                          <Main-Class>com.voicen.asr.consumer.Main</Main-Class>
                       </manifestEntries>
                   </archive>
               </configuration>
